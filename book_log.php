@@ -1,5 +1,7 @@
 <?php
 
+
+
 function dbConnect()
 {
   $link = mysqli_connect('db', 'book_log', 'pass', 'book_log');
@@ -16,8 +18,7 @@ function dbConnect()
 
 $reviews = [];
 
-
-function createReview()
+function createReview($link)
 {
   echo '読書ログを登録してください' . PHP_EOL;
   echo '書籍名：';
@@ -35,20 +36,34 @@ function createReview()
   echo '感想：';
   $summary = trim(fgets(STDIN));
 
-  echo '登録が完了しました' . PHP_EOL . PHP_EOL;
-
-  return [
-    'title' => $title,
-    'author' => $author,
-    'states' => $states,
-    'score' => $score,
-    'summary' => $summary,
-  ];
+  $sql = <<<EOT
+  INSERT INTO book_log (
+      title,
+      author,
+      states,
+      score,
+      summary
+  ) VALUES (
+      "{$title}",
+      "{$author}",
+      "{$states}",
+      $score,
+      "{$summary}"
+  )
+  EOT;
+      $result = mysqli_query($link, $sql);
+      if ($result) {
+        echo '登録が完了しました' . PHP_EOL . PHP_EOL;
+      } else {
+        echo 'Error:データの追加に失敗しました' . PHP_EOL;
+        echo 'Debugging error;' . mysqli_error($link) . PHP_EOL . PHP_EOL;
+      }
 }
 
 
 
 function listReviews($reviews)
+// function listReviews($sql)
 {
   echo '登録されている読書ログを表示します' . PHP_EOL;
 
@@ -60,7 +75,6 @@ function listReviews($reviews)
     echo '感想：' . $review['summary'] . PHP_EOL;
     echo '-------------------------' . PHP_EOL;
   }
-
 }
 
 
@@ -74,8 +88,9 @@ while (true) {
   $num = trim(fgets(STDIN));
 
   if ($num == '1') {
-    $reviews[] = createReview();
+    createReview($link);
   } elseif ($num === '2') {
+    // listReviews($reviews);
     listReviews($reviews);
   } elseif ($num === '9') {
     mysqli_close($link);
