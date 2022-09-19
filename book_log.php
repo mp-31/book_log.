@@ -1,6 +1,18 @@
 <?php
 
+function validate($reviews)
+{
+    $errors = [];
 
+    //書籍名が正しく入力されているかチェック
+    if (!strlen($reviews['title'])) {
+      $errors['title'] = '書籍名を入力してください';
+    }elseif (strlen($reviews['title']) > 255) {
+      $errors['title'] = '書籍名は255文字以内で入力してください';
+    }
+
+    return $errors;
+}
 
 function dbConnect()
 {
@@ -20,35 +32,44 @@ $reviews = [];
 
 function createReview($link)
 {
+  $reviews = [];
   echo '読書ログを登録してください' . PHP_EOL;
   echo '書籍名：';
-  $title = trim(fgets(STDIN));
+  $reviews['title'] = trim(fgets(STDIN));
 
   echo '著者名：';
-  $author = trim(fgets(STDIN));
+  $reviews['author'] = trim(fgets(STDIN));
 
   echo '読書状況（未読,読んでる,読了）:';
-  $states = trim(fgets(STDIN));
+  $reviews['states'] = trim(fgets(STDIN));
 
   echo '評価（５点満点の整数）：';
-  $score = trim(fgets(STDIN));
+  $reviews['score'] = trim(fgets(STDIN));
 
   echo '感想：';
-  $summary = trim(fgets(STDIN));
+  $reviews['summary'] = trim(fgets(STDIN));
+
+  $validated = validate($reviews);
+  if (count($validated) > 0) {
+    foreach ($validated as $error) {
+        echo $error . PHP_EOL;
+    }
+    return;
+  }
 
   $sql = <<<EOT
-  INSERT INTO book_log (
+  INSERT INTO reviews (
       title,
       author,
       states,
       score,
       summary
   ) VALUES (
-      "{$title}",
-      "{$author}",
-      "{$states}",
-      $score,
-      "{$summary}"
+      "{$reviews['title']}",
+      "{$reviews['author']}",
+      "{$reviews['states']}",
+      "{$reviews['score']}",
+      "{$reviews['summary']}"
   )
   EOT;
       $result = mysqli_query($link, $sql);
@@ -63,7 +84,6 @@ function createReview($link)
 
 
 function listReviews($reviews)
-// function listReviews($sql)
 {
   echo '登録されている読書ログを表示します' . PHP_EOL;
 
